@@ -127,17 +127,16 @@
     top: 0;
     right: 0;
     pointer-events: auto;
-    min-height: 48px;
-    border-radius: var(--radius-sm);
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
     border: 0;
     background: #ffffff;
     color: var(--ink);
-    padding: 10px 15px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 900;
+    justify-content: center;
   }
 
   .volume-icon { display: inline-flex; color: var(--ink); }
@@ -611,6 +610,7 @@
     color: var(--ink);
   }
 
+  .book-name.len-1 { font-size: clamp(16px, 1.7vw, 26px); }
   .book-name.len-2, .book-name.len-3 { font-size: clamp(14px, 1.5vw, 23px); }
   .book-name.len-4 { font-size: clamp(13px, 1.35vw, 20px); }
   .book-name.len-5 { font-size: clamp(11.5px, 1.15vw, 17px); }
@@ -740,11 +740,10 @@
 
   <div class="audio-goo-wrap">
     <button id="volumeBtn" class="volume-btn" type="button" aria-label="음량 설정">
-      <svg class="volume-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <svg class="volume-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
         <path d="M16.5 12c0-1.77-.77-3.29-2-4.24v8.48c1.23-.95 2-2.47 2-4.24z" fill="currentColor"/>
       </svg>
-      <span id="volumeLabel">음량</span>
     </button>
 
     <div id="volumePanel" class="volume-panel">
@@ -943,7 +942,7 @@
       </div>
       <div id="quizControls" class="board-controls" style="margin-top:16px;" hidden>
         <div style="width:100%;">
-          <p class="quiz-hint">사라진 15권의 이름을 순서대로 맞혀 보세요!</p>
+          <p id="quizHint" class="quiz-hint">사라진 15권의 이름을 순서대로 맞혀 보세요!</p>
           <div class="quiz-buttons">
             <button id="revealAnswerBtn" class="btn btn-secondary" type="button">정답 공개</button>
             <button id="endTeamBtn" class="btn btn-primary" type="button">이 팀 종료</button>
@@ -985,11 +984,27 @@
   <section id="nextGameScreen" class="screen">
     <div class="shell">
       <div class="panel" style="text-align:center;">
-        <h2 class="end-title">다음 게임 준비</h2>
-        <p class="end-sub">성경책 한 글자 암기 게임이 이어집니다.</p>
+        <h2 class="end-title">다음 게임: 약칭 맞추기</h2>
+        <p class="end-sub">같은 팀으로 성경 66권을 다시 암기한 뒤, 이번엔 20권이 사라지고 정답은 약칭(줄임말)으로 표시됩니다.</p>
         <div class="actions-row">
           <button id="toReviewFromNextBtn" class="btn btn-ghost" type="button">첫 번째 게임 결과 보기</button>
-          <button id="toStartFromNextBtn" class="btn btn-primary" type="button">시작 화면으로</button>
+          <button id="startAbbrGameBtn" class="btn btn-primary btn-large" type="button">약칭 맞추기 시작하기</button>
+          <button id="toStartFromNextBtn" class="btn btn-secondary" type="button">시작 화면으로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 두 번째 게임(약칭 맞추기) 완료 화면 -->
+  <section id="game2DoneScreen" class="screen">
+    <div class="shell">
+      <div class="panel" style="text-align:center;">
+        <h2 class="end-title">모든 팀이 약칭 맞추기를 완료했습니다!</h2>
+        <p class="end-sub">수고하셨습니다.</p>
+        <div class="actions-row">
+          <button id="toReviewGame2Btn" class="btn btn-ghost" type="button">약칭 게임 결과 보기</button>
+          <button id="replayGame2Btn" class="btn btn-ghost" type="button">약칭 맞추기 한 번 더</button>
+          <button id="restartAllFromGame2Btn" class="btn btn-secondary" type="button">처음부터</button>
         </div>
       </div>
     </div>
@@ -1116,10 +1131,10 @@
     { order: 66, name: "요한계시록", abbreviation: "계", testament: "신약" }
   ];
 
-  // 두 번째 게임(한 글자 암기 게임)을 붙이기 쉽도록 모듈 구조를 분리해둔다.
+  // 게임별로 붙이기 쉽도록 모듈 구조를 분리해둔다.
   const gameModules = {
     orderMemory: { start: startGameFlow },
-    abbreviationQuiz: {} // 추후 성경책 한 글자(약칭) 암기 게임에서 구현 예정
+    abbreviationQuiz: { start: startAbbreviationGame }
   };
 
   const state = {
@@ -1127,14 +1142,17 @@
     absentIds: new Set(),
     teams: [],
     memorySeconds: 60,
+    currentGame: "order", // "order" | "abbr"
     currentTeamIndex: 0,
     currentHiddenBooks: [],
     teamResults: [],
+    game2Results: [],
     timerId: null,
     paused: false,
     remainingTime: 0,
     busy: false,
     reviewReturnTo: "allDoneScreen",
+    reviewGame: "order",
     newPersonGrade: null,
     manualTeams: [],
     manualTeamIndex: 0,
@@ -1189,7 +1207,6 @@
 
   function updateVolumeUi() {
     const muted = bgmAudio.muted || bgmAudio.volume === 0;
-    $("volumeLabel").textContent = muted ? "음소거" : "음량";
     $("muteToggleBtn").textContent = muted ? "음소거 해제" : "음소거";
   }
 
@@ -1197,8 +1214,13 @@
     bgmAudio.play().catch(() => {});
   }, { once: true });
 
+  $("volumePanel").inert = true;
+
   $("volumeBtn").addEventListener("click", () => {
-    $("volumePanel").hidden = !$("volumePanel").hidden;
+    const panel = $("volumePanel");
+    const willShow = !panel.classList.contains("show");
+    panel.classList.toggle("show", willShow);
+    panel.inert = !willShow;
   });
 
   $("volumeSlider").addEventListener("input", () => {
@@ -1483,6 +1505,15 @@
     return Array.from(new Set([...singles, ...pairs.flat()]));
   }
 
+  // 약칭 맞추기 게임: 인접 규칙 없이 완전히 무작위로 count개를 선정한다.
+  function selectRandomHiddenBooks(count) {
+    return shuffle(Array.from({ length: bibleBooks.length }, (_, i) => i + 1)).slice(0, count);
+  }
+
+  function pickHiddenBooksForRound() {
+    return state.currentGame === "abbr" ? selectRandomHiddenBooks(20) : selectHiddenBibleBooks();
+  }
+
   function hideBookCell(order, slotNumber) {
     const cell = $(`book-${order}`);
     if (!cell) return;
@@ -1509,6 +1540,17 @@
     $("quizControls").hidden = false;
   }
 
+  // 약칭 맞추기 게임에서는 정답 칸에 전체 이름 대신 약칭을 보여준다.
+  function applyRevealedContent(cell, order) {
+    const book = bibleBooks.find(b => b.order === order);
+    if (!book) return;
+    const contentEl = cell.querySelector(".book-content");
+    if (!contentEl) return;
+    contentEl.innerHTML = state.currentGame === "abbr"
+      ? `<span class="book-order">${book.order}</span><span class="book-name len-${book.abbreviation.length}">${book.abbreviation}</span>`
+      : `<span class="book-order">${book.order}</span>${getBookNameMarkup(book.name)}`;
+  }
+
   function toggleRevealAnswers() {
     if (state.answersRevealed) {
       state.currentHiddenBooks.forEach(order => {
@@ -1525,6 +1567,7 @@
       state.currentHiddenBooks.forEach(order => {
         const cell = $(`book-${order}`);
         if (cell) {
+          applyRevealedContent(cell, order);
           cell.classList.remove("book-hidden");
           cell.classList.add("book-revealed");
         }
@@ -1544,29 +1587,37 @@
       const book = bibleBooks.find(b => b.order === order);
       const item = document.createElement("div");
       item.className = "hidden-book-item";
-      item.textContent = `${book.order}. ${book.name}`;
+      item.textContent = state.currentGame === "abbr"
+        ? `${book.order}. ${book.abbreviation} (${book.name})`
+        : `${book.order}. ${book.name}`;
       grid.appendChild(item);
     });
   }
 
   function startTeamRound() {
     clearInterval(state.timerId);
-    state.currentHiddenBooks = selectHiddenBibleBooks();
+    state.currentHiddenBooks = pickHiddenBooksForRound();
     state.answersRevealed = false;
     $("revealAnswerBtn").textContent = "정답 공개";
     renderBoard();
     setBoardMode("memorize");
     $("boardTeamLabel").textContent = teamLabel(state.currentTeamIndex);
+    $("quizHint").textContent = `사라진 ${state.currentHiddenBooks.length}권의 ${state.currentGame === "abbr" ? "약칭" : "이름"}을 순서대로 맞혀 보세요!`;
     show("boardScreen");
     startMemoryTimer();
   }
 
   async function finishCurrentTeam() {
     clearInterval(state.timerId);
-    state.teamResults[state.currentTeamIndex] = {
+    const resultEntry = {
       teamIndex: state.currentTeamIndex,
       hiddenBooks: [...state.currentHiddenBooks].sort((a, b) => a - b)
     };
+    if (state.currentGame === "abbr") {
+      state.game2Results[state.currentTeamIndex] = resultEntry;
+    } else {
+      state.teamResults[state.currentTeamIndex] = resultEntry;
+    }
     state.currentTeamIndex += 1;
     if (state.currentTeamIndex < state.teams.length) {
       await showTeamIntro(state.currentTeamIndex);
@@ -1577,16 +1628,20 @@
   }
 
   function showFinalScreen() {
-    show("allDoneScreen");
+    show(state.currentGame === "abbr" ? "game2DoneScreen" : "allDoneScreen");
   }
 
   function renderTeamReview() {
     const grid = $("reviewGrid");
     grid.innerHTML = "";
-    state.teamResults.forEach(result => {
+    const results = state.reviewGame === "abbr" ? state.game2Results : state.teamResults;
+    results.forEach(result => {
       if (!result) return;
       const names = result.hiddenBooks
-        .map(order => bibleBooks.find(b => b.order === order).name)
+        .map(order => {
+          const book = bibleBooks.find(b => b.order === order);
+          return state.reviewGame === "abbr" ? book.abbreviation : book.name;
+        })
         .join(", ");
       const card = document.createElement("div");
       card.className = "review-card";
@@ -1595,8 +1650,9 @@
     });
   }
 
-  function openTeamReview(returnTo) {
+  function openTeamReview(returnTo, game) {
     state.reviewReturnTo = returnTo;
+    state.reviewGame = game || "order";
     renderTeamReview();
     show("teamReviewScreen");
   }
@@ -1606,15 +1662,25 @@
     show("setupScreen");
   }
 
+  async function startAbbreviationGame() {
+    state.currentGame = "abbr";
+    state.currentTeamIndex = 0;
+    state.game2Results = [];
+    await showTeamIntro(0);
+    startTeamRound();
+  }
+
   function resetGame() {
     clearInterval(state.timerId);
     state.teamCount = 4;
     state.absentIds.clear();
     state.teams = [];
     state.memorySeconds = 60;
+    state.currentGame = "order";
     state.currentTeamIndex = 0;
     state.currentHiddenBooks = [];
     state.teamResults = [];
+    state.game2Results = [];
     state.paused = false;
     $("teamCountValue").textContent = state.teamCount;
     $("memoryTimeValue").textContent = state.memorySeconds;
@@ -1701,6 +1767,7 @@
   $("memoryTimeIncBtn").addEventListener("click", () => changeMemorySeconds(5));
 
   $("startGameBtn").addEventListener("click", withBusyLock(async () => {
+    state.currentGame = "order";
     state.currentTeamIndex = 0;
     state.teamResults = [];
     await showTeamIntro(0);
@@ -1728,6 +1795,8 @@
     const cell = event.target.closest(".book-cell");
     if (!cell) return;
     if (cell.classList.contains("book-hidden")) {
+      const order = Number(cell.id.replace("book-", ""));
+      applyRevealedContent(cell, order);
       cell.classList.remove("book-hidden");
       cell.classList.add("book-revealed");
     } else if (cell.classList.contains("book-revealed")) {
@@ -1736,8 +1805,9 @@
     }
   });
 
-  $("toReviewBtn").addEventListener("click", () => openTeamReview("allDoneScreen"));
+  $("toReviewBtn").addEventListener("click", () => openTeamReview("allDoneScreen", "order"));
   $("replayGameBtn").addEventListener("click", withBusyLock(async () => {
+    state.currentGame = "order";
     state.currentTeamIndex = 0;
     state.teamResults = [];
     await showTeamIntro(0);
@@ -1747,8 +1817,13 @@
   $("restartAllBtn").addEventListener("click", resetGame);
   $("backFromReviewBtn").addEventListener("click", () => show(state.reviewReturnTo));
 
-  $("toReviewFromNextBtn").addEventListener("click", () => openTeamReview("nextGameScreen"));
+  $("toReviewFromNextBtn").addEventListener("click", () => openTeamReview("nextGameScreen", "order"));
   $("toStartFromNextBtn").addEventListener("click", resetGame);
+  $("startAbbrGameBtn").addEventListener("click", withBusyLock(startAbbreviationGame));
+
+  $("toReviewGame2Btn").addEventListener("click", () => openTeamReview("game2DoneScreen", "abbr"));
+  $("replayGame2Btn").addEventListener("click", withBusyLock(startAbbreviationGame));
+  $("restartAllFromGame2Btn").addEventListener("click", resetGame);
 
   // 초기 렌더링
   renderRoster();
