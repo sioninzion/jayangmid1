@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>성경 66권 암기 퀴즈</title>
+<style>
+  @font-face {
+    font-family: "JejuDoldam";
+    src: url("./31. EARLYFONT_JEJUDOLDAM/EF_jejudoldam(TTF).ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "WatermelonSalad";
+    src: url("./9.수박화체/EF_watermelonSalad(ttf).ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --paper: #f3fbff;
+    --mist: #e3f6fb;
+    --ink: #0d3b52;
+    --muted: #4f7a90;
+    --line: rgba(13, 59, 82, 0.16);
+    --teal: #14b8c4;
+    --teal-dark: #0a7f8a;
+    --teal-soft: #e0f8fa;
+    --coral: #2f6fd1;
+    --coral-dark: #1f4f9e;
+    --coral-soft: #e3edff;
+    --sun: #ffd866;
+    --sun-dark: #8a6300;
+    --leaf: #34b7a7;
+    --blue: #3aa0e6;
+    --shadow: 0 18px 44px rgba(13, 59, 82, 0.18);
+    --radius: 20px;
+    --radius-sm: 10px;
+    --max: 1600px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    min-height: 100%;
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.6), transparent 26%),
+      radial-gradient(circle at 88% 8%, rgba(20, 184, 196, 0.2), transparent 30%),
+      linear-gradient(160deg, #f6fcff 0%, #dff3fb 48%, #c9e9f6 100%);
+    font-family: "WatermelonSalad", "Pretendard", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", system-ui, sans-serif;
+  }
+
+  .title, .mini-title, .end-title, .overlay-text, .team-card h2 {
+    font-family: "JejuDoldam", "WatermelonSalad", "Pretendard", "Noto Sans KR", sans-serif;
+  }
+
+  button, input, select {
+    font: inherit;
+    color: inherit;
+  }
+
+  button { border: 0; cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+  .app {
+    min-height: 100vh;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: clamp(18px, 3.4vw, 52px);
+  }
+
+  .screen.active {
+    display: grid;
+    place-items: center;
+    animation: screenIn 0.3s ease both;
+  }
+
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .shell { width: min(var(--max), 100%); margin: 0 auto; }
+
+  .fullscreen-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 60;
+    min-height: 48px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--ink);
+    padding: 10px 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 10px 22px rgba(13, 59, 82, 0.14);
+    backdrop-filter: blur(10px);
+  }
+
+  .audio-goo-wrap {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 60;
+    pointer-events: none;
+    filter: url(#goo-filter) drop-shadow(0 10px 18px rgba(13, 59, 82, 0.2));
+  }
+
+  .volume-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    pointer-events: auto;
+    min-height: 48px;
+    border-radius: var(--radius-sm);
+    border: 0;
+    background: #ffffff;
+    color: var(--ink);
+    padding: 10px 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .volume-icon { display: inline-flex; color: var(--ink); }
+
+  .volume-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    background: #ffffff;
+    pointer-events: none;
+    transform-origin: top right;
+    transform: scale(0.1) translateY(0);
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .volume-panel.show {
+    transform: scale(1) translateY(54px);
+    pointer-events: auto;
+  }
+
+  .volume-slider {
+    width: 100%;
+    accent-color: var(--teal);
+  }
+
+  .fullscreen-icon {
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .fullscreen-icon::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+    opacity: 0.4;
+  }
+
+  .btn {
+    min-height: 60px;
+    border-radius: var(--radius-sm);
+    padding: 15px 26px;
+    font-weight: 900;
+    font-size: clamp(17px, 1.4vw, 23px);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+  .btn-primary { background: var(--teal); color: white; box-shadow: 0 12px 26px rgba(20, 184, 196, 0.28); }
+  .btn-secondary { background: var(--sun); color: #4b3510; box-shadow: 0 12px 22px rgba(255, 216, 102, 0.3); }
+  .btn-ghost { background: white; border: 1px solid var(--line); color: var(--ink); }
+  .btn-small { min-height: 46px; padding: 10px 18px; font-size: clamp(14px, 1vw, 17px); }
+  .btn-large { min-height: 74px; padding: 20px 40px; font-size: clamp(22px, 2vw, 30px); }
+
+  .actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  /* Start screen */
+  .start-layout {
+    width: min(1100px, 100%);
+    display: grid;
+    gap: clamp(24px, 4.4vw, 60px);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .brand-mark { width: min(360px, 58vw); aspect-ratio: 1.7 / 1; filter: drop-shadow(0 14px 22px rgba(13, 59, 82, 0.16)); }
+
+  .title {
+    margin: 0;
+    font-size: clamp(38px, 6.6vw, 76px);
+    line-height: 1.12;
+    font-weight: 900;
+  }
+
+  .subtitle {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: clamp(18px, 2.1vw, 26px);
+    font-weight: 800;
+  }
+
+  /* Common headers */
+  .topbar {
+    width: 100%;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .mini-title { margin: 0; font-size: clamp(24px, 3vw, 36px); font-weight: 900; }
+
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    border-radius: 999px;
+    padding: 9px 16px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: clamp(14px, 1.05vw, 17px);
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .panel {
+    width: 100%;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    padding: clamp(20px, 3vw, 42px);
+  }
+
+  /* Stepper */
+  .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(18px, 3vw, 44px);
+    margin: 8px 0 6px;
+  }
+
+  .stepper-btn {
+    width: clamp(52px, 6vw, 74px);
+    height: clamp(52px, 6vw, 74px);
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal-dark);
+    font-size: clamp(26px, 2.6vw, 36px);
+    font-weight: 900;
+    border: 1px solid rgba(20, 184, 196, 0.3);
+  }
+
+  .stepper-value {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: clamp(140px, 16vw, 220px);
+    justify-content: center;
+  }
+
+  .stepper-number {
+    font-size: clamp(56px, 8vw, 110px);
+    font-weight: 950;
+    line-height: 1;
+  }
+
+  .stepper-unit { font-size: clamp(20px, 2vw, 30px); font-weight: 800; color: var(--muted); }
+
+  .setup-note { text-align: center; color: var(--muted); font-weight: 800; font-size: clamp(15px, 1.2vw, 19px); }
+
+  /* Roster */
+  .setup-panel { display: grid; gap: 22px; }
+
+  .panel-head { display: flex; gap: 16px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+  .panel-head p { margin: 6px 0 0; color: var(--muted); font-weight: 700; font-size: clamp(15px, 1.1vw, 19px); }
+
+  .roster {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    max-height: min(46vh, 480px);
+    overflow: auto;
+    padding: 3px;
+  }
+
+  .person-card {
+    min-height: 56px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: white;
+    font-weight: 900;
+    font-size: clamp(15px, 1.1vw, 19px);
+    transition: transform 0.14s ease, background 0.14s ease, opacity 0.14s ease;
+  }
+
+  .person-card.g0 { border-left: 6px solid var(--coral); }
+  .person-card.g1 { border-left: 6px solid var(--blue); }
+  .person-card.g2 { border-left: 6px solid var(--sun-dark); }
+  .person-card.g3 { border-left: 6px solid var(--teal); }
+
+  .person-card.absent {
+    background: #eef1f2;
+    color: #8a9ba0;
+    text-decoration: line-through;
+    opacity: 0.72;
+    transform: scale(0.98);
+  }
+
+  .person-card.selected {
+    background: var(--teal);
+    color: white;
+    border-color: var(--teal-dark);
+    transform: scale(1.02);
+    box-shadow: 0 8px 18px rgba(20, 184, 196, 0.32);
+  }
+
+  .person-card.auto-assigned {
+    background: var(--teal-soft);
+    border-color: rgba(20, 184, 196, 0.4);
+    color: var(--teal-dark);
+    opacity: 0.9;
+  }
+
+  .add-person-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: #f8fbfb;
+    padding: 16px 20px;
+  }
+
+  .text-input {
+    min-height: 52px;
+    min-width: 200px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: white;
+    padding: 0 16px;
+    font-size: clamp(15px, 1.1vw, 19px);
+    font-weight: 800;
+  }
+
+  .grade-picker { display: flex; align-items: center; gap: 8px; }
+  .grade-picker-label { font-weight: 800; color: var(--muted); font-size: clamp(14px, 1vw, 17px); }
+
+  .grade-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background: white;
+    border: 2px solid var(--line);
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  .grade-btn.selected {
+    background: var(--teal);
+    border-color: var(--teal-dark);
+    color: white;
+  }
+
+  .warning-text {
+    text-align: center;
+    color: var(--coral-dark);
+    font-weight: 900;
+    font-size: clamp(17px, 1.4vw, 22px);
+  }
+
+  /* Team result */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: clamp(16px, 2vw, 26px);
+  }
+
+  .team-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: white;
+    padding: clamp(18px, 2vw, 28px);
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+
+  .team-card.accent-0 { border-top: 8px solid var(--teal); }
+  .team-card.accent-1 { border-top: 8px solid var(--coral); }
+  .team-card.accent-2 { border-top: 8px solid var(--blue); }
+  .team-card.accent-3 { border-top: 8px solid var(--sun-dark); }
+
+  .team-card h2 { margin: 0; font-size: clamp(24px, 2.6vw, 34px); font-weight: 900; }
+  .team-total { color: var(--muted); font-size: clamp(15px, 1.05vw, 19px); font-weight: 800; }
+  .team-grade-summary { margin: 0; color: var(--muted); font-weight: 800; font-size: clamp(14px, 1vw, 17px); }
+
+  .team-member-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .team-member-chip {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #f8fbfb;
+    padding: 8px 13px;
+    font-weight: 800;
+    font-size: clamp(13px, 0.95vw, 16px);
+  }
+
+  /* Rules */
+  .rules-list {
+    margin: 0;
+    padding-left: 1.4em;
+    display: grid;
+    gap: 16px;
+    font-size: clamp(19px, 2.1vw, 29px);
+    font-weight: 850;
+    line-height: 1.45;
+    word-break: keep-all;
+  }
+
+  /* Overlays */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    background: rgba(244, 250, 249, 0.92);
+    backdrop-filter: blur(16px);
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .overlay.show { opacity: 1; visibility: visible; pointer-events: auto; }
+
+  .overlay-card {
+    width: min(680px, 92vw);
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    gap: 26px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, white, #f3fffc);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .overlay-text {
+    margin: 0;
+    font-size: clamp(36px, 6vw, 68px);
+    font-weight: 900;
+    color: var(--teal-dark);
+  }
+
+  /* Board */
+  .board-status {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .status-left { display: flex; gap: 10px; align-items: center; }
+
+  .board-team-badge, .board-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-weight: 900;
+    font-size: clamp(16px, 1.3vw, 21px);
+  }
+
+  .board-team-badge { background: var(--ink); color: white; }
+  .board-mode-badge { background: var(--teal-soft); color: var(--teal-dark); border: 1px solid rgba(20, 184, 196, 0.3); }
+
+  .board-timer { display: flex; align-items: baseline; gap: 8px; font-weight: 900; }
+  .timer-label { color: var(--muted); font-size: clamp(14px, 1vw, 17px); }
+  .timer-count { color: var(--coral-dark); font-size: clamp(30px, 3.6vw, 50px); line-height: 1; }
+  .timer-unit { color: var(--muted); font-size: clamp(14px, 1vw, 17px); }
+
+  .progress-track {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(13, 59, 82, 0.12);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--sun), var(--coral));
+    transition: width 0.2s linear;
+  }
+
+  .board-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .quiz-hint {
+    text-align: center;
+    margin: 0 0 8px;
+    font-weight: 900;
+    font-size: clamp(18px, 1.7vw, 26px);
+    color: var(--teal-dark);
+  }
+
+  .quiz-buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+  .bible-board {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 6px;
+    width: 100%;
+    height: min(58vh, 600px);
+  }
+
+  .book-cell {
+    position: relative;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--line);
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    overflow: hidden;
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .book-cell.testament-ot { border-color: rgba(20, 184, 196, 0.5); }
+  .book-cell.testament-nt { border-color: rgba(47, 111, 209, 0.5); }
+
+  .book-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: opacity 0.25s ease;
+  }
+
+  .book-order { font-size: clamp(9px, 0.85vw, 13px); font-weight: 800; color: var(--muted); }
+
+  .book-name {
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.15;
+    word-break: keep-all;
+    color: var(--ink);
+  }
+
+  .book-name.len-2, .book-name.len-3 { font-size: clamp(14px, 1.5vw, 23px); }
+  .book-name.len-4 { font-size: clamp(13px, 1.35vw, 20px); }
+  .book-name.len-5 { font-size: clamp(11.5px, 1.15vw, 17px); }
+  .book-name.len-6 { font-size: clamp(10.5px, 1.02vw, 15px); }
+  .book-name.len-7 { font-size: clamp(9.5px, 0.92vw, 13.5px); }
+
+  .book-name.split {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+    font-size: clamp(13.5px, 1.4vw, 21px);
+  }
+
+  .book-name.split .name-line { display: block; }
+
+  .book-slot-number {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-weight: 950;
+    font-size: clamp(18px, 2.2vw, 34px);
+    color: var(--teal-dark);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .book-cell.book-hidden,
+  .book-cell.book-revealed { cursor: pointer; }
+
+  .book-cell.book-hidden { background: #eef2f2; transform: scale(0.92); }
+  .book-cell.book-hidden .book-content { opacity: 0; }
+  .book-cell.book-hidden .book-slot-number { display: flex; opacity: 1; }
+
+  .book-cell.book-revealed {
+    background: linear-gradient(135deg, #fff6da, #ffe9ad);
+    border-color: var(--sun-dark);
+    transform: scale(1);
+  }
+  .book-cell.book-revealed .book-content { opacity: 1; }
+  .book-cell.book-revealed::after {
+    content: "정답";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 8px;
+    font-weight: 900;
+    color: var(--sun-dark);
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+
+  .hidden-books-list { margin-top: 16px; }
+  .hidden-books-title { margin: 0 0 10px; font-size: clamp(18px, 1.6vw, 24px); font-weight: 900; }
+
+  .hidden-books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .hidden-book-item {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: #f8fbfb;
+    padding: 10px 13px;
+    font-weight: 800;
+    font-size: clamp(14px, 1.05vw, 17px);
+    text-align: center;
+  }
+
+  /* Result / review */
+  .end-title { margin: 0; text-align: center; font-size: clamp(32px, 5.6vw, 58px); font-weight: 900; }
+  .end-sub { text-align: center; margin: 12px 0 0; color: var(--muted); font-weight: 800; font-size: clamp(17px, 1.4vw, 22px); }
+
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+
+  .review-card {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: white;
+    padding: 18px 20px;
+  }
+
+  .review-card h3 { margin: 0 0 8px; font-size: clamp(19px, 1.8vw, 26px); font-weight: 900; }
+  .review-card p { margin: 0; color: var(--muted); font-weight: 700; font-size: clamp(14px, 1.05vw, 17px); line-height: 1.5; }
+
+  @media (max-width: 860px) {
+    .screen { padding: 14px; }
+    .panel { padding: clamp(16px, 4vw, 24px); }
+    .bible-board { grid-template-columns: repeat(6, minmax(0, 1fr)); height: auto; }
+    .book-cell { aspect-ratio: 1 / 1; }
+  }
+
+  @media (max-width: 560px) {
+    .btn { min-height: 52px; padding: 12px 18px; }
+    .bible-board { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .roster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .team-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <button id="fullscreenBtn" class="fullscreen-btn" type="button" aria-label="전체화면 전환">
+    <span class="fullscreen-icon" aria-hidden="true"></span>
+    <span id="fullscreenLabel">전체화면</span>
+  </button>
+
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <defs>
+      <filter id="goo-filter">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="audio-goo-wrap">
+    <button id="volumeBtn" class="volume-btn" type="button" aria-label="음량 설정">
+      <svg class="volume-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+        <path d="M16.5 12c0-1.77-.77-3.29-2-4.24v8.48c1.23-.95 2-2.47 2-4.24z" fill="currentColor"/>
+      </svg>
+      <span id="volumeLabel">음량</span>
+    </button>
+
+    <div id="volumePanel" class="volume-panel">
+      <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" value="50" aria-label="배경음악 음량" />
+      <button id="muteToggleBtn" class="btn btn-ghost btn-small" type="button">음소거</button>
+    </div>
+  </div>
+
+  <audio id="bgmAudio" src="./jymdgbgm.mp3" loop preload="auto"></audio>
+
+  <!-- 1. 시작 화면 -->
+  <section id="startScreen" class="screen active">
+    <div class="start-layout">
+      <svg class="brand-mark" viewBox="0 0 400 240" role="img" aria-label="성경책 모양 로고">
+        <path d="M40 60 C90 40, 150 40, 200 62 L200 200 C150 178, 90 178, 40 200 Z" fill="#e0f8fa" stroke="#0a7f8a" stroke-width="6"/>
+        <path d="M360 60 C310 40, 250 40, 200 62 L200 200 C250 178, 310 178, 360 200 Z" fill="#e3edff" stroke="#1f4f9e" stroke-width="6"/>
+        <path d="M70 82 h100 M70 108 h120 M70 134 h90" stroke="#0a7f8a" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+        <path d="M330 82 h-100 M330 108 h-120 M330 134 h-90" stroke="#1f4f9e" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+        <rect x="188" y="30" width="24" height="60" rx="4" fill="#ffd866"/>
+      </svg>
+      <div>
+        <h1 class="title">성경 66권 암기 퀴즈</h1>
+        <p class="subtitle">성경책의 이름과 순서를 팀원들과 함께 외워 보세요!</p>
+      </div>
+      <div class="actions-row">
+        <button id="startBtn" class="btn btn-primary btn-large" type="button">시작하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 팀 수 및 결석자 설정 화면 -->
+  <section id="setupScreen" class="screen">
+    <div class="shell setup-panel">
+      <div class="panel setup-panel">
+        <div class="topbar">
+          <h2 class="mini-title">팀 수 설정</h2>
+        </div>
+        <div class="stepper">
+          <button id="teamCountDecBtn" class="stepper-btn" type="button" aria-label="팀 수 감소">−</button>
+          <div class="stepper-value">
+            <span id="teamCountValue" class="stepper-number">4</span>
+            <span class="stepper-unit">팀</span>
+          </div>
+          <button id="teamCountIncBtn" class="stepper-btn" type="button" aria-label="팀 수 증가">+</button>
+        </div>
+        <p class="setup-note">팀 수는 최소 2팀, 최대 8팀까지 설정할 수 있습니다.</p>
+      </div>
+
+      <div class="panel setup-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="mini-title">결석자 선택</h2>
+            <p>오늘 결석한 사람을 선택해 주세요.</p>
+          </div>
+          <div class="pill-row">
+            <span id="rosterTotalPill" class="pill">전체 인원 <span id="rosterTotalCount">39</span>명</span>
+            <span id="rosterActivePill" class="pill">참여 인원 <span id="rosterActiveCount">39</span>명</span>
+            <span id="rosterAbsentPill" class="pill">결석 인원 <span id="rosterAbsentCount">0</span>명</span>
+          </div>
+        </div>
+        <div id="roster" class="roster"></div>
+        <div class="actions-row">
+          <button id="addPersonBtn" class="btn btn-ghost" type="button">학생 추가</button>
+          <button id="clearAbsentBtn" class="btn btn-ghost" type="button">결석자 선택 초기화</button>
+        </div>
+        <div id="addPersonForm" class="add-person-form" hidden>
+          <input id="addPersonName" class="text-input" type="text" placeholder="이름 입력" maxlength="12" />
+          <div class="grade-picker">
+            <span class="grade-picker-label">학년</span>
+            <button type="button" class="grade-btn" data-grade="0">0</button>
+            <button type="button" class="grade-btn" data-grade="1">1</button>
+            <button type="button" class="grade-btn" data-grade="2">2</button>
+            <button type="button" class="grade-btn" data-grade="3">3</button>
+          </div>
+          <div class="actions-row">
+            <button id="confirmAddPersonBtn" class="btn btn-primary btn-small" type="button">추가</button>
+            <button id="cancelAddPersonBtn" class="btn btn-ghost btn-small" type="button">취소</button>
+          </div>
+        </div>
+      </div>
+
+      <p id="setupWarning" class="warning-text" hidden>참여 인원이 팀 수보다 적습니다.</p>
+
+      <div class="actions-row">
+        <button id="assignTeamsBtn" class="btn btn-primary btn-large" type="button">팀원 선택 시작하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2.5 팀원 직접 선택 화면 -->
+  <section id="manualTeamSelectScreen" class="screen">
+    <div class="shell">
+      <div class="panel setup-panel">
+        <div class="panel-head">
+          <div>
+            <h2 id="manualTeamTitle" class="mini-title">1팀 팀원을 선택하세요 (권장인원 5명)</h2>
+            <p>이름을 눌러 이번 팀에 넣을 팀원을 선택해 주세요.</p>
+          </div>
+          <div class="pill-row">
+            <span id="manualSelectedPill" class="pill">선택 인원 0명</span>
+          </div>
+        </div>
+        <div id="manualRemainingRoster" class="roster"></div>
+        <div id="manualAutoNote" class="setup-note" hidden>마지막 팀에는 남은 인원이 모두 자동으로 배정됩니다.</div>
+        <p id="manualSelectWarning" class="warning-text" hidden>최소 1명 이상 선택해 주세요.</p>
+        <div class="actions-row">
+          <button id="manualClearSelectionBtn" class="btn btn-ghost" type="button">선택 초기화</button>
+          <button id="manualNextTeamBtn" class="btn btn-primary btn-large" type="button">다음 팀</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 팀 배정 결과 화면 -->
+  <section id="teamResultScreen" class="screen">
+    <div class="shell">
+      <div class="topbar">
+        <h2 class="mini-title">팀 배정 결과</h2>
+      </div>
+      <div id="teamGrid" class="team-grid"></div>
+      <div class="actions-row">
+        <button id="reshuffleBtn" class="btn btn-ghost" type="button">다시 선택하기</button>
+        <button id="reselectAbsentBtn" class="btn btn-ghost" type="button">결석자 다시 선택</button>
+        <button id="toRulesBtn" class="btn btn-primary" type="button">게임 설명</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 게임 설명 화면 -->
+  <section id="rulesScreen" class="screen">
+    <div class="shell">
+      <div class="panel setup-panel">
+        <h2 class="mini-title">게임 설명</h2>
+        <ol class="rules-list">
+          <li>게임은 1팀부터 순서대로 한 팀씩 진행합니다.</li>
+          <li>먼저 성경 66권의 이름과 순서를 암기합니다.</li>
+          <li>암기 시간이 끝나면 성경책 15권이 차례대로 사라집니다.</li>
+          <li>사라진 성경책의 이름과 위치를 팀원들과 함께 맞혀야 합니다.</li>
+          <li>한 팀의 게임이 끝나면 다음 팀이 진행합니다.</li>
+          <li>모든 팀이 한 번씩 진행하면 첫 번째 게임이 끝납니다.</li>
+        </ol>
+        <div class="actions-row">
+          <button id="backToTeamsBtn" class="btn btn-ghost" type="button">팀 다시 보기</button>
+          <button id="toTimeSetupBtn" class="btn btn-primary" type="button">암기 시간 설정</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 암기 시간 설정 화면 -->
+  <section id="timeSetupScreen" class="screen">
+    <div class="shell">
+      <div class="panel setup-panel">
+        <h2 class="mini-title" style="text-align:center;">암기 시간 설정</h2>
+        <div class="stepper">
+          <button id="memoryTimeDecBtn" class="stepper-btn" type="button" aria-label="암기 시간 감소">−</button>
+          <div class="stepper-value">
+            <span id="memoryTimeValue" class="stepper-number">60</span>
+            <span class="stepper-unit">초</span>
+          </div>
+          <button id="memoryTimeIncBtn" class="stepper-btn" type="button" aria-label="암기 시간 증가">+</button>
+        </div>
+        <p class="setup-note">각 팀은 같은 암기 시간으로 진행합니다. (5초 ~ 300초, 5초 단위)</p>
+        <div class="actions-row">
+          <button id="backToRulesFromTimeBtn" class="btn btn-ghost" type="button">이전</button>
+          <button id="startGameBtn" class="btn btn-primary btn-large" type="button">1팀 게임 시작</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 각 팀별 성경 66권 암기 게임 -->
+  <section id="boardScreen" class="screen">
+    <div class="shell">
+      <div class="board-status">
+        <div class="status-left">
+          <span id="boardTeamLabel" class="board-team-badge">1팀</span>
+          <span id="boardModeLabel" class="board-mode-badge">암기 중</span>
+        </div>
+        <div id="boardTimerWrap" class="board-timer">
+          <span class="timer-label">남은 시간</span>
+          <span id="boardTimerCount" class="timer-count">60</span>
+          <span class="timer-unit">초</span>
+        </div>
+      </div>
+      <div id="boardProgressTrack" class="progress-track">
+        <div id="boardProgressFill" class="progress-fill"></div>
+      </div>
+      <div id="boardMemorizeControls" class="board-controls">
+        <button id="pauseBtn" class="btn btn-ghost btn-small" type="button">일시정지</button>
+        <button id="resumeBtn" class="btn btn-ghost btn-small" type="button" hidden>계속</button>
+        <button id="restartMemorizeBtn" class="btn btn-ghost btn-small" type="button">처음부터 다시</button>
+      </div>
+      <div class="panel">
+        <div id="bibleBoard" class="bible-board"></div>
+      </div>
+      <div id="quizControls" class="board-controls" style="margin-top:16px;" hidden>
+        <div style="width:100%;">
+          <p class="quiz-hint">사라진 15권의 이름을 순서대로 맞혀 보세요!</p>
+          <div class="quiz-buttons">
+            <button id="revealAnswerBtn" class="btn btn-secondary" type="button">정답 공개</button>
+            <button id="endTeamBtn" class="btn btn-primary" type="button">이 팀 종료</button>
+          </div>
+        </div>
+      </div>
+      <div id="hiddenBooksList" class="panel hidden-books-list" style="margin-top:16px;" hidden></div>
+    </div>
+  </section>
+
+  <!-- 7. 모든 팀 진행 완료 화면 -->
+  <section id="allDoneScreen" class="screen">
+    <div class="shell">
+      <div class="panel" style="text-align:center;">
+        <h2 class="end-title">모든 팀이 한 번씩 게임을 완료했습니다!</h2>
+        <p class="end-sub">다음 게임은 사회자가 넘겨 주세요.</p>
+        <div class="actions-row">
+          <button id="toReviewBtn" class="btn btn-ghost" type="button">팀 결과 다시 보기</button>
+          <button id="replayGameBtn" class="btn btn-ghost" type="button">현재 게임 한 번 더</button>
+          <button id="toNextGameBtn" class="btn btn-primary" type="button">다음 게임</button>
+          <button id="restartAllBtn" class="btn btn-secondary" type="button">처음부터</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 팀 결과 다시 보기 화면 -->
+  <section id="teamReviewScreen" class="screen">
+    <div class="shell">
+      <div class="topbar">
+        <h2 class="mini-title">팀별 사라진 성경책</h2>
+        <button id="backFromReviewBtn" class="btn btn-ghost btn-small" type="button">뒤로</button>
+      </div>
+      <div id="reviewGrid" class="review-grid"></div>
+    </div>
+  </section>
+
+  <!-- 8. 다음 게임 준비 화면 -->
+  <section id="nextGameScreen" class="screen">
+    <div class="shell">
+      <div class="panel" style="text-align:center;">
+        <h2 class="end-title">다음 게임 준비</h2>
+        <p class="end-sub">성경책 한 글자 암기 게임이 이어집니다.</p>
+        <div class="actions-row">
+          <button id="toReviewFromNextBtn" class="btn btn-ghost" type="button">첫 번째 게임 결과 보기</button>
+          <button id="toStartFromNextBtn" class="btn btn-primary" type="button">시작 화면으로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 팀 시작 안내 오버레이 (사회자가 준비 완료를 눌러야 사라짐) -->
+  <div id="teamIntroOverlay" class="overlay" aria-live="polite">
+    <div class="overlay-card">
+      <p id="teamIntroText" class="overlay-text">1팀 시작!</p>
+      <button id="teamIntroReadyBtn" class="btn btn-primary btn-large" type="button">준비 완료</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  function shuffle(list) {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  // ---- 참여자 명단 ----
+  const people = [
+    { name: "김시온", grade: 1 }, { name: "노연우", grade: 1 }, { name: "신유진", grade: 1 },
+    { name: "이은솔", grade: 1 }, { name: "장서은", grade: 1 }, { name: "고주은", grade: 1 },
+    { name: "서지윤", grade: 1 }, { name: "이환", grade: 1 }, { name: "정하율", grade: 1 },
+    { name: "천동현", grade: 1 }, { name: "강성찬", grade: 1 }, { name: "김민서", grade: 1 },
+    { name: "윤승아", grade: 1 }, { name: "이태연", grade: 1 }, { name: "임준서", grade: 1 },
+    { name: "하혜린", grade: 1 }, { name: "오승현", grade: 1 }, { name: "정도영", grade: 1 },
+    { name: "하연주", grade: 1 }, { name: "한인률", grade: 1 },
+    { name: "김희원", grade: 2 }, { name: "임윤아", grade: 2 }, { name: "전유림", grade: 2 },
+    { name: "정유민", grade: 2 },
+    { name: "김하율", grade: 3 }, { name: "노진우", grade: 3 }, { name: "백예성", grade: 3 },
+    { name: "손가윤", grade: 3 }, { name: "유다현", grade: 3 }, { name: "이동현", grade: 3 },
+    { name: "이준서", grade: 3 }, { name: "고주광", grade: 3 }, { name: "박서현", grade: 3 },
+    { name: "송다은", grade: 3 }, { name: "이주원", grade: 3 }, { name: "김예준", grade: 3 },
+    { name: "신영진", grade: 3 }, { name: "이예은", grade: 3 }, { name: "이은우", grade: 3 }
+  ].map((person, index) => ({ id: index, ...person }));
+
+  let nextPersonId = people.length;
+
+  function addPerson(name, grade) {
+    const trimmed = name.trim();
+    if (!trimmed) return false;
+    people.push({ id: nextPersonId, name: trimmed, grade });
+    nextPersonId += 1;
+    return true;
+  }
+
+  // ---- 성경 66권 데이터 (순서, 이름, 약칭, 구약/신약) ----
+  const bibleBooks = [
+    { order: 1, name: "창세기", abbreviation: "창", testament: "구약" },
+    { order: 2, name: "출애굽기", abbreviation: "출", testament: "구약" },
+    { order: 3, name: "레위기", abbreviation: "레", testament: "구약" },
+    { order: 4, name: "민수기", abbreviation: "민", testament: "구약" },
+    { order: 5, name: "신명기", abbreviation: "신", testament: "구약" },
+    { order: 6, name: "여호수아", abbreviation: "수", testament: "구약" },
+    { order: 7, name: "사사기", abbreviation: "삿", testament: "구약" },
+    { order: 8, name: "룻기", abbreviation: "룻", testament: "구약" },
+    { order: 9, name: "사무엘상", abbreviation: "삼상", testament: "구약" },
+    { order: 10, name: "사무엘하", abbreviation: "삼하", testament: "구약" },
+    { order: 11, name: "열왕기상", abbreviation: "왕상", testament: "구약" },
+    { order: 12, name: "열왕기하", abbreviation: "왕하", testament: "구약" },
+    { order: 13, name: "역대상", abbreviation: "대상", testament: "구약" },
+    { order: 14, name: "역대하", abbreviation: "대하", testament: "구약" },
+    { order: 15, name: "에스라", abbreviation: "스", testament: "구약" },
+    { order: 16, name: "느헤미야", abbreviation: "느", testament: "구약" },
+    { order: 17, name: "에스더", abbreviation: "에", testament: "구약" },
+    { order: 18, name: "욥기", abbreviation: "욥", testament: "구약" },
+    { order: 19, name: "시편", abbreviation: "시", testament: "구약" },
+    { order: 20, name: "잠언", abbreviation: "잠", testament: "구약" },
+    { order: 21, name: "전도서", abbreviation: "전", testament: "구약" },
+    { order: 22, name: "아가", abbreviation: "아", testament: "구약" },
+    { order: 23, name: "이사야", abbreviation: "사", testament: "구약" },
+    { order: 24, name: "예레미야", abbreviation: "렘", testament: "구약" },
+    { order: 25, name: "예레미야애가", abbreviation: "애", testament: "구약" },
+    { order: 26, name: "에스겔", abbreviation: "겔", testament: "구약" },
+    { order: 27, name: "다니엘", abbreviation: "단", testament: "구약" },
+    { order: 28, name: "호세아", abbreviation: "호", testament: "구약" },
+    { order: 29, name: "요엘", abbreviation: "욜", testament: "구약" },
+    { order: 30, name: "아모스", abbreviation: "암", testament: "구약" },
+    { order: 31, name: "오바댜", abbreviation: "옵", testament: "구약" },
+    { order: 32, name: "요나", abbreviation: "욘", testament: "구약" },
+    { order: 33, name: "미가", abbreviation: "미", testament: "구약" },
+    { order: 34, name: "나훔", abbreviation: "나", testament: "구약" },
+    { order: 35, name: "하박국", abbreviation: "합", testament: "구약" },
+    { order: 36, name: "스바냐", abbreviation: "습", testament: "구약" },
+    { order: 37, name: "학개", abbreviation: "학", testament: "구약" },
+    { order: 38, name: "스가랴", abbreviation: "슥", testament: "구약" },
+    { order: 39, name: "말라기", abbreviation: "말", testament: "구약" },
+    { order: 40, name: "마태복음", abbreviation: "마", testament: "신약" },
+    { order: 41, name: "마가복음", abbreviation: "막", testament: "신약" },
+    { order: 42, name: "누가복음", abbreviation: "눅", testament: "신약" },
+    { order: 43, name: "요한복음", abbreviation: "요", testament: "신약" },
+    { order: 44, name: "사도행전", abbreviation: "행", testament: "신약" },
+    { order: 45, name: "로마서", abbreviation: "롬", testament: "신약" },
+    { order: 46, name: "고린도전서", abbreviation: "고전", testament: "신약" },
+    { order: 47, name: "고린도후서", abbreviation: "고후", testament: "신약" },
+    { order: 48, name: "갈라디아서", abbreviation: "갈", testament: "신약" },
+    { order: 49, name: "에베소서", abbreviation: "엡", testament: "신약" },
+    { order: 50, name: "빌립보서", abbreviation: "빌", testament: "신약" },
+    { order: 51, name: "골로새서", abbreviation: "골", testament: "신약" },
+    { order: 52, name: "데살로니가전서", abbreviation: "살전", testament: "신약" },
+    { order: 53, name: "데살로니가후서", abbreviation: "살후", testament: "신약" },
+    { order: 54, name: "디모데전서", abbreviation: "딤전", testament: "신약" },
+    { order: 55, name: "디모데후서", abbreviation: "딤후", testament: "신약" },
+    { order: 56, name: "디도서", abbreviation: "딛", testament: "신약" },
+    { order: 57, name: "빌레몬서", abbreviation: "몬", testament: "신약" },
+    { order: 58, name: "히브리서", abbreviation: "히", testament: "신약" },
+    { order: 59, name: "야고보서", abbreviation: "약", testament: "신약" },
+    { order: 60, name: "베드로전서", abbreviation: "벧전", testament: "신약" },
+    { order: 61, name: "베드로후서", abbreviation: "벧후", testament: "신약" },
+    { order: 62, name: "요한일서", abbreviation: "요일", testament: "신약" },
+    { order: 63, name: "요한이서", abbreviation: "요이", testament: "신약" },
+    { order: 64, name: "요한삼서", abbreviation: "요삼", testament: "신약" },
+    { order: 65, name: "유다서", abbreviation: "유", testament: "신약" },
+    { order: 66, name: "요한계시록", abbreviation: "계", testament: "신약" }
+  ];
+
+  // 두 번째 게임(한 글자 암기 게임)을 붙이기 쉽도록 모듈 구조를 분리해둔다.
+  const gameModules = {
+    orderMemory: { start: startGameFlow },
+    abbreviationQuiz: {} // 추후 성경책 한 글자(약칭) 암기 게임에서 구현 예정
+  };
+
+  const state = {
+    teamCount: 4,
+    absentIds: new Set(),
+    teams: [],
+    memorySeconds: 60,
+    currentTeamIndex: 0,
+    currentHiddenBooks: [],
+    teamResults: [],
+    timerId: null,
+    paused: false,
+    remainingTime: 0,
+    busy: false,
+    reviewReturnTo: "allDoneScreen",
+    newPersonGrade: null,
+    manualTeams: [],
+    manualTeamIndex: 0,
+    manualRemaining: [],
+    manualSelectedIds: new Set(),
+    recommendedPerTeam: 0,
+    answersRevealed: false
+  };
+
+  function withBusyLock(fn) {
+    return async (...args) => {
+      if (state.busy) return;
+      state.busy = true;
+      try {
+        await fn(...args);
+      } finally {
+        state.busy = false;
+      }
+    };
+  }
+
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+    $(id).classList.add("active");
+  }
+
+  function teamLabel(index) {
+    return `${index + 1}팀`;
+  }
+
+  // ---- 전체화면 ----
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      $("fullscreenLabel").textContent = "지원 안됨";
+      window.setTimeout(updateFullscreenLabel, 1200);
+    }
+  }
+
+  function updateFullscreenLabel() {
+    $("fullscreenLabel").textContent = document.fullscreenElement ? "창모드" : "전체화면";
+  }
+
+  // ---- 배경음악 / 음량 ----
+  const bgmAudio = $("bgmAudio");
+  bgmAudio.volume = 0.5;
+
+  function updateVolumeUi() {
+    const muted = bgmAudio.muted || bgmAudio.volume === 0;
+    $("volumeLabel").textContent = muted ? "음소거" : "음량";
+    $("muteToggleBtn").textContent = muted ? "음소거 해제" : "음소거";
+  }
+
+  document.addEventListener("click", () => {
+    bgmAudio.play().catch(() => {});
+  }, { once: true });
+
+  $("volumeBtn").addEventListener("click", () => {
+    $("volumePanel").hidden = !$("volumePanel").hidden;
+  });
+
+  $("volumeSlider").addEventListener("input", () => {
+    const value = Number($("volumeSlider").value) / 100;
+    bgmAudio.volume = value;
+    if (value > 0 && bgmAudio.muted) bgmAudio.muted = false;
+    updateVolumeUi();
+  });
+
+  $("muteToggleBtn").addEventListener("click", () => {
+    bgmAudio.muted = !bgmAudio.muted;
+    updateVolumeUi();
+  });
+
+  updateVolumeUi();
+
+  // ---- 팀 수 / 암기 시간 조절 ----
+  function changeTeamCount(delta) {
+    state.teamCount = Math.min(8, Math.max(2, state.teamCount + delta));
+    $("teamCountValue").textContent = state.teamCount;
+  }
+
+  function changeMemorySeconds(delta) {
+    state.memorySeconds = Math.min(300, Math.max(5, state.memorySeconds + delta));
+    $("memoryTimeValue").textContent = state.memorySeconds;
+  }
+
+  // ---- 결석자 선택 / 명단 ----
+  function activePeople() {
+    return people.filter(person => !state.absentIds.has(person.id));
+  }
+
+  function renderRoster() {
+    const roster = $("roster");
+    roster.innerHTML = "";
+    people.forEach(person => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `person-card g${person.grade}`;
+      button.textContent = `${person.name} (${person.grade})`;
+      button.classList.toggle("absent", state.absentIds.has(person.id));
+      button.addEventListener("click", () => {
+        if (state.absentIds.has(person.id)) state.absentIds.delete(person.id);
+        else state.absentIds.add(person.id);
+        button.classList.toggle("absent", state.absentIds.has(person.id));
+        updateRosterCounts();
+      });
+      roster.appendChild(button);
+    });
+    updateRosterCounts();
+  }
+
+  function updateRosterCounts() {
+    $("rosterTotalCount").textContent = people.length;
+    $("rosterActiveCount").textContent = activePeople().length;
+    $("rosterAbsentCount").textContent = state.absentIds.size;
+  }
+
+  // ---- 팀원 직접 선택 ----
+  function startManualTeamSelection() {
+    state.manualTeams = Array.from({ length: state.teamCount }, () => []);
+    state.manualTeamIndex = 0;
+    state.manualRemaining = activePeople();
+    state.manualSelectedIds = new Set();
+    state.recommendedPerTeam = Math.max(1, Math.round(state.manualRemaining.length / state.teamCount));
+    renderManualTeamSelect();
+    show("manualTeamSelectScreen");
+  }
+
+  function isLastManualTeam() {
+    return state.manualTeamIndex === state.teamCount - 1;
+  }
+
+  function renderManualTeamSelect() {
+    $("manualSelectWarning").hidden = true;
+    const isLast = isLastManualTeam();
+    $("manualTeamTitle").textContent = isLast
+      ? `${teamLabel(state.manualTeamIndex)} 팀원을 선택하세요 (남은 인원 전체 자동 배정)`
+      : `${teamLabel(state.manualTeamIndex)} 팀원을 선택하세요 (권장인원 ${state.recommendedPerTeam}명)`;
+    $("manualAutoNote").hidden = !isLast;
+    $("manualClearSelectionBtn").hidden = isLast;
+    $("manualNextTeamBtn").textContent = isLast ? "팀 배정 완료" : "다음 팀";
+
+    const roster = $("manualRemainingRoster");
+    roster.innerHTML = "";
+    state.manualRemaining.forEach(person => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `person-card g${person.grade}`;
+      button.textContent = `${person.name} (${person.grade})`;
+      if (isLast) {
+        button.classList.add("auto-assigned");
+        button.disabled = true;
+      } else {
+        button.classList.toggle("selected", state.manualSelectedIds.has(person.id));
+        button.addEventListener("click", () => {
+          if (state.manualSelectedIds.has(person.id)) state.manualSelectedIds.delete(person.id);
+          else state.manualSelectedIds.add(person.id);
+          button.classList.toggle("selected", state.manualSelectedIds.has(person.id));
+          updateManualSelectedCount();
+        });
+      }
+      roster.appendChild(button);
+    });
+    updateManualSelectedCount();
+  }
+
+  function updateManualSelectedCount() {
+    $("manualSelectedPill").textContent = isLastManualTeam()
+      ? `자동 배정 ${state.manualRemaining.length}명`
+      : `선택 인원 ${state.manualSelectedIds.size}명`;
+  }
+
+  function confirmManualTeam() {
+    if (isLastManualTeam()) {
+      state.manualTeams[state.manualTeamIndex] = state.manualRemaining;
+      state.teams = state.manualTeams;
+      renderTeams();
+      show("teamResultScreen");
+      return;
+    }
+    if (state.manualSelectedIds.size === 0) {
+      $("manualSelectWarning").hidden = false;
+      return;
+    }
+    $("manualSelectWarning").hidden = true;
+    const chosen = state.manualRemaining.filter(person => state.manualSelectedIds.has(person.id));
+    state.manualTeams[state.manualTeamIndex] = chosen;
+    state.manualRemaining = state.manualRemaining.filter(person => !state.manualSelectedIds.has(person.id));
+    state.manualSelectedIds = new Set();
+    state.manualTeamIndex += 1;
+    renderManualTeamSelect();
+  }
+
+  function renderTeams() {
+    const grid = $("teamGrid");
+    grid.innerHTML = "";
+    state.teams.forEach((team, index) => {
+      const gradeCounts = [0, 1, 2, 3].map(grade => team.filter(person => person.grade === grade).length);
+      const card = document.createElement("article");
+      card.className = `team-card accent-${index % 4}`;
+      const membersHtml = team
+        .slice()
+        .sort((a, b) => a.grade - b.grade || a.name.localeCompare(b.name, "ko"))
+        .map(person => `<span class="team-member-chip">${person.name} (${person.grade})</span>`)
+        .join("");
+      card.innerHTML = `
+        <h2>${teamLabel(index)} <span class="team-total">· 총 ${team.length}명</span></h2>
+        <p class="team-grade-summary">0학년 ${gradeCounts[0]}명 · 1학년 ${gradeCounts[1]}명 · 2학년 ${gradeCounts[2]}명 · 3학년 ${gradeCounts[3]}명</p>
+        <div class="team-member-list">${membersHtml}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ---- 팀 시작 안내 오버레이 ----
+  function showTeamIntro(teamIndex) {
+    return new Promise(resolve => {
+      $("teamIntroText").textContent = `${teamLabel(teamIndex)} 시작!`;
+      $("teamIntroOverlay").classList.add("show");
+      const btn = $("teamIntroReadyBtn");
+      const handler = () => {
+        $("teamIntroOverlay").classList.remove("show");
+        btn.removeEventListener("click", handler);
+        resolve();
+      };
+      btn.addEventListener("click", handler);
+    });
+  }
+
+  // ---- 성경책 보드 ----
+  function getBookNameMarkup(name) {
+    const suffixes = ["전서", "후서"];
+    for (const suffix of suffixes) {
+      if (name.endsWith(suffix) && name.length > suffix.length) {
+        const prefix = name.slice(0, name.length - suffix.length);
+        return `<span class="book-name split"><span class="name-line">${prefix}</span><span class="name-line">${suffix}</span></span>`;
+      }
+    }
+    return `<span class="book-name len-${name.length}">${name}</span>`;
+  }
+
+  function renderBoard() {
+    const board = $("bibleBoard");
+    board.innerHTML = "";
+    bibleBooks.forEach(book => {
+      const cell = document.createElement("div");
+      cell.className = `book-cell testament-${book.testament === "구약" ? "ot" : "nt"}`;
+      cell.id = `book-${book.order}`;
+      cell.innerHTML = `
+        <div class="book-content">
+          <span class="book-order">${book.order}</span>
+          ${getBookNameMarkup(book.name)}
+        </div>
+        <div class="book-slot-number"></div>
+      `;
+      board.appendChild(cell);
+    });
+  }
+
+  function setBoardMode(mode) {
+    // mode: "memorize" | "quiz"
+    $("boardModeLabel").textContent = mode === "memorize" ? "암기 중" : "정답 맞히기";
+    $("boardTimerWrap").hidden = mode !== "memorize";
+    $("boardProgressTrack").hidden = mode !== "memorize";
+    $("boardMemorizeControls").hidden = mode !== "memorize";
+    $("quizControls").hidden = mode === "memorize";
+    $("hiddenBooksList").hidden = true;
+  }
+
+  function togglePauseButtons(paused) {
+    $("pauseBtn").hidden = paused;
+    $("resumeBtn").hidden = !paused;
+  }
+
+  function updateTimerDisplay() {
+    $("boardTimerCount").textContent = state.remainingTime;
+    const pct = Math.max(0, (state.remainingTime / state.memorySeconds) * 100);
+    $("boardProgressFill").style.width = `${pct}%`;
+  }
+
+  function startMemoryTimer() {
+    clearInterval(state.timerId);
+    state.remainingTime = state.memorySeconds;
+    state.paused = false;
+    togglePauseButtons(false);
+    updateTimerDisplay();
+    state.timerId = setInterval(() => {
+      if (state.paused) return;
+      state.remainingTime -= 1;
+      updateTimerDisplay();
+      if (state.remainingTime <= 0) {
+        clearInterval(state.timerId);
+        beginHidingSequence();
+      }
+    }, 1000);
+  }
+
+  // 사라질 성경책 15권을 선정한다: 일반 무작위 11권 + 연속 2권 묶음 2개(총 4권)
+  function selectHiddenBibleBooks() {
+    const total = bibleBooks.length;
+    const usedOrders = new Set();
+    const pairs = [];
+
+    while (pairs.length < 2) {
+      const start = Math.floor(Math.random() * (total - 1)) + 1; // 1 ~ 65
+      const a = start;
+      const b = start + 1;
+      if (usedOrders.has(a) || usedOrders.has(b)) continue;
+      if (pairs.length === 1) {
+        const [p1a, p1b] = pairs[0];
+        if (a === p1b + 1 || b === p1a - 1) continue; // 4권 연속 형성 회피
+      }
+      usedOrders.add(a);
+      usedOrders.add(b);
+      pairs.push([a, b]);
+    }
+
+    // 일반 무작위 11권은 서로 인접(연속)하지 않도록, 그리고 두 연속 묶음과도 붙지 않도록 선정한다.
+    const singles = [];
+    let guard = 0;
+    while (singles.length < 11 && guard < 5000) {
+      guard += 1;
+      const candidate = Math.floor(Math.random() * total) + 1;
+      if (usedOrders.has(candidate)) continue;
+      if (usedOrders.has(candidate - 1) || usedOrders.has(candidate + 1)) continue;
+      singles.push(candidate);
+      usedOrders.add(candidate);
+    }
+    // 매우 드물게 조건을 만족하는 후보를 다 못 찾은 경우, 남은 자리를 인접 조건 없이 채운다.
+    if (singles.length < 11) {
+      const fallbackPool = shuffle(
+        Array.from({ length: total }, (_, i) => i + 1).filter(order => !usedOrders.has(order))
+      );
+      for (const order of fallbackPool) {
+        if (singles.length >= 11) break;
+        singles.push(order);
+        usedOrders.add(order);
+      }
+    }
+
+    return Array.from(new Set([...singles, ...pairs.flat()]));
+  }
+
+  function hideBookCell(order, slotNumber) {
+    const cell = $(`book-${order}`);
+    if (!cell) return;
+    const slotEl = cell.querySelector(".book-slot-number");
+    if (slotEl) slotEl.textContent = slotNumber;
+    cell.classList.remove("book-revealed");
+    cell.classList.add("book-hidden");
+  }
+
+  async function beginHidingSequence() {
+    setBoardMode("quiz");
+    $("quizControls").hidden = true;
+    state.answersRevealed = false;
+    $("revealAnswerBtn").textContent = "정답 공개";
+    // 빈칸 번호는 성경 순서(앞에서부터)를 기준으로 매기고, 사라지는 애니메이션 순서는 무작위로 섞는다.
+    const sortedHidden = [...state.currentHiddenBooks].sort((a, b) => a - b);
+    const teamSize = Math.max(1, (state.teams[state.currentTeamIndex] || []).length);
+    const slotNumberByOrder = new Map(sortedHidden.map((bookOrder, i) => [bookOrder, (i % teamSize) + 1]));
+    const order = shuffle([...state.currentHiddenBooks]);
+    for (let i = 0; i < order.length; i += 1) {
+      hideBookCell(order[i], slotNumberByOrder.get(order[i]));
+      await sleep(100);
+    }
+    $("quizControls").hidden = false;
+  }
+
+  function toggleRevealAnswers() {
+    if (state.answersRevealed) {
+      state.currentHiddenBooks.forEach(order => {
+        const cell = $(`book-${order}`);
+        if (cell) {
+          cell.classList.remove("book-revealed");
+          cell.classList.add("book-hidden");
+        }
+      });
+      $("hiddenBooksList").hidden = true;
+      state.answersRevealed = false;
+      $("revealAnswerBtn").textContent = "정답 공개";
+    } else {
+      state.currentHiddenBooks.forEach(order => {
+        const cell = $(`book-${order}`);
+        if (cell) {
+          cell.classList.remove("book-hidden");
+          cell.classList.add("book-revealed");
+        }
+      });
+      renderHiddenBooksList();
+      $("hiddenBooksList").hidden = false;
+      state.answersRevealed = true;
+      $("revealAnswerBtn").textContent = "빈칸으로 가리기";
+    }
+  }
+
+  function renderHiddenBooksList() {
+    const list = $("hiddenBooksList");
+    list.innerHTML = '<h3 class="hidden-books-title">사라진 성경책</h3><div class="hidden-books-grid"></div>';
+    const grid = list.querySelector(".hidden-books-grid");
+    [...state.currentHiddenBooks].sort((a, b) => a - b).forEach(order => {
+      const book = bibleBooks.find(b => b.order === order);
+      const item = document.createElement("div");
+      item.className = "hidden-book-item";
+      item.textContent = `${book.order}. ${book.name}`;
+      grid.appendChild(item);
+    });
+  }
+
+  function startTeamRound() {
+    clearInterval(state.timerId);
+    state.currentHiddenBooks = selectHiddenBibleBooks();
+    state.answersRevealed = false;
+    $("revealAnswerBtn").textContent = "정답 공개";
+    renderBoard();
+    setBoardMode("memorize");
+    $("boardTeamLabel").textContent = teamLabel(state.currentTeamIndex);
+    show("boardScreen");
+    startMemoryTimer();
+  }
+
+  async function finishCurrentTeam() {
+    clearInterval(state.timerId);
+    state.teamResults[state.currentTeamIndex] = {
+      teamIndex: state.currentTeamIndex,
+      hiddenBooks: [...state.currentHiddenBooks].sort((a, b) => a - b)
+    };
+    state.currentTeamIndex += 1;
+    if (state.currentTeamIndex < state.teams.length) {
+      await showTeamIntro(state.currentTeamIndex);
+      startTeamRound();
+    } else {
+      showFinalScreen();
+    }
+  }
+
+  function showFinalScreen() {
+    show("allDoneScreen");
+  }
+
+  function renderTeamReview() {
+    const grid = $("reviewGrid");
+    grid.innerHTML = "";
+    state.teamResults.forEach(result => {
+      if (!result) return;
+      const names = result.hiddenBooks
+        .map(order => bibleBooks.find(b => b.order === order).name)
+        .join(", ");
+      const card = document.createElement("div");
+      card.className = "review-card";
+      card.innerHTML = `<h3>${teamLabel(result.teamIndex)}</h3><p>${names}</p>`;
+      grid.appendChild(card);
+    });
+  }
+
+  function openTeamReview(returnTo) {
+    state.reviewReturnTo = returnTo;
+    renderTeamReview();
+    show("teamReviewScreen");
+  }
+
+  function startGameFlow() {
+    renderRoster();
+    show("setupScreen");
+  }
+
+  function resetGame() {
+    clearInterval(state.timerId);
+    state.teamCount = 4;
+    state.absentIds.clear();
+    state.teams = [];
+    state.memorySeconds = 60;
+    state.currentTeamIndex = 0;
+    state.currentHiddenBooks = [];
+    state.teamResults = [];
+    state.paused = false;
+    $("teamCountValue").textContent = state.teamCount;
+    $("memoryTimeValue").textContent = state.memorySeconds;
+    renderRoster();
+    show("startScreen");
+  }
+
+  // ---- 이벤트 바인딩 ----
+  $("fullscreenBtn").addEventListener("click", toggleFullscreen);
+  document.addEventListener("fullscreenchange", updateFullscreenLabel);
+
+  $("startBtn").addEventListener("click", () => {
+    renderRoster();
+    show("setupScreen");
+  });
+
+  $("teamCountDecBtn").addEventListener("click", () => changeTeamCount(-1));
+  $("teamCountIncBtn").addEventListener("click", () => changeTeamCount(1));
+
+  $("clearAbsentBtn").addEventListener("click", () => {
+    state.absentIds.clear();
+    renderRoster();
+  });
+
+  $("addPersonBtn").addEventListener("click", () => {
+    const form = $("addPersonForm");
+    form.hidden = !form.hidden;
+    if (!form.hidden) $("addPersonName").focus();
+  });
+
+  $("cancelAddPersonBtn").addEventListener("click", () => closeAddPersonForm());
+
+  document.querySelectorAll(".grade-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".grade-btn").forEach(other => other.classList.remove("selected"));
+      btn.classList.add("selected");
+      state.newPersonGrade = Number(btn.dataset.grade);
+    });
+  });
+
+  $("confirmAddPersonBtn").addEventListener("click", () => {
+    const name = $("addPersonName").value;
+    if (!name.trim() || state.newPersonGrade === null) return;
+    addPerson(name, state.newPersonGrade);
+    closeAddPersonForm();
+    renderRoster();
+  });
+
+  function closeAddPersonForm() {
+    $("addPersonForm").hidden = true;
+    $("addPersonName").value = "";
+    state.newPersonGrade = null;
+    document.querySelectorAll(".grade-btn").forEach(btn => btn.classList.remove("selected"));
+  }
+
+  $("assignTeamsBtn").addEventListener("click", () => {
+    const active = activePeople();
+    if (active.length < state.teamCount) {
+      $("setupWarning").hidden = false;
+      return;
+    }
+    $("setupWarning").hidden = true;
+    startManualTeamSelection();
+  });
+
+  $("manualClearSelectionBtn").addEventListener("click", () => {
+    state.manualSelectedIds = new Set();
+    renderManualTeamSelect();
+  });
+
+  $("manualNextTeamBtn").addEventListener("click", confirmManualTeam);
+
+  $("reshuffleBtn").addEventListener("click", () => {
+    startManualTeamSelection();
+  });
+
+  $("reselectAbsentBtn").addEventListener("click", () => show("setupScreen"));
+  $("toRulesBtn").addEventListener("click", () => show("rulesScreen"));
+  $("backToTeamsBtn").addEventListener("click", () => show("teamResultScreen"));
+  $("toTimeSetupBtn").addEventListener("click", () => show("timeSetupScreen"));
+  $("backToRulesFromTimeBtn").addEventListener("click", () => show("rulesScreen"));
+
+  $("memoryTimeDecBtn").addEventListener("click", () => changeMemorySeconds(-5));
+  $("memoryTimeIncBtn").addEventListener("click", () => changeMemorySeconds(5));
+
+  $("startGameBtn").addEventListener("click", withBusyLock(async () => {
+    state.currentTeamIndex = 0;
+    state.teamResults = [];
+    await showTeamIntro(0);
+    startTeamRound();
+  }));
+
+  $("pauseBtn").addEventListener("click", () => {
+    state.paused = true;
+    togglePauseButtons(true);
+  });
+  $("resumeBtn").addEventListener("click", () => {
+    state.paused = false;
+    togglePauseButtons(false);
+  });
+  $("restartMemorizeBtn").addEventListener("click", () => {
+    clearInterval(state.timerId);
+    startMemoryTimer();
+  });
+
+  $("revealAnswerBtn").addEventListener("click", toggleRevealAnswers);
+  $("endTeamBtn").addEventListener("click", withBusyLock(finishCurrentTeam));
+
+  // 빈칸을 직접 클릭하면 해당 칸만 정답을 보여주고, 다시 누르면 빈칸으로 되돌아간다.
+  $("bibleBoard").addEventListener("click", event => {
+    const cell = event.target.closest(".book-cell");
+    if (!cell) return;
+    if (cell.classList.contains("book-hidden")) {
+      cell.classList.remove("book-hidden");
+      cell.classList.add("book-revealed");
+    } else if (cell.classList.contains("book-revealed")) {
+      cell.classList.remove("book-revealed");
+      cell.classList.add("book-hidden");
+    }
+  });
+
+  $("toReviewBtn").addEventListener("click", () => openTeamReview("allDoneScreen"));
+  $("replayGameBtn").addEventListener("click", withBusyLock(async () => {
+    state.currentTeamIndex = 0;
+    state.teamResults = [];
+    await showTeamIntro(0);
+    startTeamRound();
+  }));
+  $("toNextGameBtn").addEventListener("click", () => show("nextGameScreen"));
+  $("restartAllBtn").addEventListener("click", resetGame);
+  $("backFromReviewBtn").addEventListener("click", () => show(state.reviewReturnTo));
+
+  $("toReviewFromNextBtn").addEventListener("click", () => openTeamReview("nextGameScreen"));
+  $("toStartFromNextBtn").addEventListener("click", resetGame);
+
+  // 초기 렌더링
+  renderRoster();
+</script>
+</body>
+</html>
