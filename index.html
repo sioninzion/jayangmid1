@@ -6,16 +6,24 @@
 <title>성경 66권 암기 퀴즈</title>
 <style>
   @font-face {
-    font-family: "JejuDoldam";
-    src: url("./31. EARLYFONT_JEJUDOLDAM/EF_jejudoldam(TTF).ttf") format("truetype");
+    font-family: "WatermelonSalad";
+    src: url("./9.수박화체/EF_watermelonSalad(ttf).ttf") format("truetype");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
   }
 
   @font-face {
-    font-family: "WatermelonSalad";
-    src: url("./9.수박화체/EF_watermelonSalad(ttf).ttf") format("truetype");
+    font-family: "HakgyoansimBold";
+    src: url("./학교안심 알림장/Hakgyoansim Allimjang TTF B.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "HakgyoansimRegular";
+    src: url("./학교안심 알림장/Hakgyoansim Allimjang TTF R.ttf") format("truetype");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -57,7 +65,11 @@
   }
 
   .title, .mini-title, .end-title, .overlay-text, .team-card h2 {
-    font-family: "JejuDoldam", "WatermelonSalad", "Pretendard", "Noto Sans KR", sans-serif;
+    font-family: "HakgyoansimBold", "Pretendard", "Noto Sans KR", sans-serif;
+  }
+
+  .subtitle, .end-sub {
+    font-family: "HakgyoansimRegular", "Pretendard", "Noto Sans KR", sans-serif;
   }
 
   button, input, select {
@@ -297,7 +309,7 @@
 
   .stepper-value {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
     min-width: clamp(140px, 16vw, 220px);
     justify-content: center;
@@ -306,8 +318,36 @@
   .stepper-number {
     font-size: clamp(56px, 8vw, 110px);
     font-weight: 950;
-    line-height: 1;
+    line-height: 1.35;
   }
+
+  .odometer { display: inline-flex; }
+
+  .odometer-digit {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    height: 1.35em;
+    line-height: 1.35;
+    min-width: 0.68em;
+    vertical-align: middle;
+  }
+
+  .odometer-digit-current {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    transition: transform 0.15s ease;
+    transform: translateY(0);
+  }
+
+  .odometer-digit-current.enter-from-top { transform: translateY(-100%); }
+  .odometer-digit-current.enter-from-bottom { transform: translateY(100%); }
+  .odometer-digit-current.odometer-settle { transform: translateY(0); }
+  .odometer-digit-current.exit-to-bottom { transform: translateY(100%); }
+  .odometer-digit-current.exit-to-top { transform: translateY(-100%); }
 
   .stepper-unit { font-size: clamp(20px, 2vw, 30px); font-weight: 800; color: var(--muted); }
 
@@ -784,7 +824,7 @@
         <div class="stepper">
           <button id="teamCountDecBtn" class="stepper-btn" type="button" aria-label="팀 수 감소">−</button>
           <div class="stepper-value">
-            <span id="teamCountValue" class="stepper-number">4</span>
+            <span id="teamCountValue" class="stepper-number odometer">4</span>
             <span class="stepper-unit">팀</span>
           </div>
           <button id="teamCountIncBtn" class="stepper-btn" type="button" aria-label="팀 수 증가">+</button>
@@ -901,7 +941,7 @@
         <div class="stepper">
           <button id="memoryTimeDecBtn" class="stepper-btn" type="button" aria-label="암기 시간 감소">−</button>
           <div class="stepper-value">
-            <span id="memoryTimeValue" class="stepper-number">60</span>
+            <span id="memoryTimeValue" class="stepper-number odometer">60</span>
             <span class="stepper-unit">초</span>
           </div>
           <button id="memoryTimeIncBtn" class="stepper-btn" type="button" aria-label="암기 시간 증가">+</button>
@@ -1003,7 +1043,8 @@
         <p class="end-sub">수고하셨습니다.</p>
         <div class="actions-row">
           <button id="toReviewGame2Btn" class="btn btn-ghost" type="button">약칭 게임 결과 보기</button>
-          <button id="replayGame2Btn" class="btn btn-ghost" type="button">약칭 맞추기 한 번 더</button>
+          <button id="replayGame2Btn" class="btn btn-ghost" type="button">약칭 맞추기 다시하기</button>
+          <button id="replayGame1FromGame2Btn" class="btn btn-ghost" type="button">이름 맞추기 다시하기</button>
           <button id="restartAllFromGame2Btn" class="btn btn-secondary" type="button">처음부터</button>
         </div>
       </div>
@@ -1237,15 +1278,88 @@
 
   updateVolumeUi();
 
+  // ---- 숫자 카운트 롤링 애니메이션(오도미터) ----
+  // 일의 자리는 다음 숫자가 위에서 아래로 넘어오듯, 그 외 자리(십의 자리 등)는
+  // 아래에서 위로 올라오듯 넘어간다. 애니메이션 소요 시간은 0.15초.
+  const ODOMETER_DURATION_MS = 150;
+
+  function renderOdometer(container, valueStr) {
+    const newDigits = valueStr.split("");
+    const prevDigits = (container.dataset.digits || "").split("").filter(Boolean);
+    const maxLen = Math.max(newDigits.length, prevDigits.length);
+    const paddedNew = newDigits.slice();
+    const paddedPrev = prevDigits.slice();
+    while (paddedNew.length < maxLen) paddedNew.unshift("");
+    while (paddedPrev.length < maxLen) paddedPrev.unshift("");
+
+    container.dataset.digits = valueStr;
+
+    const existingReels = container.querySelectorAll(".odometer-digit");
+    if (existingReels.length !== maxLen) {
+      container.innerHTML = "";
+      for (let i = 0; i < maxLen; i += 1) {
+        const reel = document.createElement("span");
+        reel.className = "odometer-digit";
+        const inner = document.createElement("span");
+        inner.className = "odometer-digit-current";
+        inner.textContent = paddedNew[i];
+        reel.appendChild(inner);
+        container.appendChild(reel);
+      }
+      return;
+    }
+
+    const reels = container.querySelectorAll(".odometer-digit");
+    for (let i = 0; i < maxLen; i += 1) {
+      if (paddedNew[i] === paddedPrev[i]) continue;
+      const isOnesPlace = i === maxLen - 1;
+      animateDigitReel(reels[i], paddedNew[i], isOnesPlace);
+    }
+  }
+
+  function animateDigitReel(reel, newDigit, isOnesPlace) {
+    // 애니메이션이 끝나기 전에 다시 호출되면(빠른 연타) 이전 정리 타이머를 취소하고,
+    // 남아있는 레이어를 마지막 하나만 남기고 즉시 정리해 잔상이 겹치지 않게 한다.
+    if (reel._odometerTimeout) {
+      clearTimeout(reel._odometerTimeout);
+      reel._odometerTimeout = null;
+    }
+    while (reel.children.length > 1) {
+      reel.removeChild(reel.firstChild);
+    }
+
+    const outgoing = reel.querySelector(".odometer-digit-current");
+    if (!outgoing) return;
+    outgoing.classList.remove("enter-from-top", "enter-from-bottom", "odometer-settle", "exit-to-top", "exit-to-bottom");
+    void outgoing.offsetWidth;
+
+    const incoming = document.createElement("span");
+    incoming.className = `odometer-digit-current ${isOnesPlace ? "enter-from-top" : "enter-from-bottom"}`;
+    incoming.textContent = newDigit;
+    reel.appendChild(incoming);
+
+    outgoing.classList.add(isOnesPlace ? "exit-to-bottom" : "exit-to-top");
+
+    // 강제 리플로우 후 클래스를 바꿔야 진입 애니메이션이 실제로 트랜지션된다.
+    void incoming.offsetWidth;
+    incoming.classList.add("odometer-settle");
+
+    reel._odometerTimeout = window.setTimeout(() => {
+      outgoing.remove();
+      incoming.classList.remove("enter-from-top", "enter-from-bottom", "odometer-settle");
+      reel._odometerTimeout = null;
+    }, ODOMETER_DURATION_MS + 30);
+  }
+
   // ---- 팀 수 / 암기 시간 조절 ----
   function changeTeamCount(delta) {
     state.teamCount = Math.min(8, Math.max(2, state.teamCount + delta));
-    $("teamCountValue").textContent = state.teamCount;
+    renderOdometer($("teamCountValue"), String(state.teamCount));
   }
 
   function changeMemorySeconds(delta) {
     state.memorySeconds = Math.min(300, Math.max(5, state.memorySeconds + delta));
-    $("memoryTimeValue").textContent = state.memorySeconds;
+    renderOdometer($("memoryTimeValue"), String(state.memorySeconds));
   }
 
   // ---- 결석자 선택 / 명단 ----
@@ -1670,6 +1784,14 @@
     startTeamRound();
   }
 
+  async function replayOrderGame() {
+    state.currentGame = "order";
+    state.currentTeamIndex = 0;
+    state.teamResults = [];
+    await showTeamIntro(0);
+    startTeamRound();
+  }
+
   function resetGame() {
     clearInterval(state.timerId);
     state.teamCount = 4;
@@ -1682,8 +1804,8 @@
     state.teamResults = [];
     state.game2Results = [];
     state.paused = false;
-    $("teamCountValue").textContent = state.teamCount;
-    $("memoryTimeValue").textContent = state.memorySeconds;
+    renderOdometer($("teamCountValue"), String(state.teamCount));
+    renderOdometer($("memoryTimeValue"), String(state.memorySeconds));
     renderRoster();
     show("startScreen");
   }
@@ -1806,13 +1928,7 @@
   });
 
   $("toReviewBtn").addEventListener("click", () => openTeamReview("allDoneScreen", "order"));
-  $("replayGameBtn").addEventListener("click", withBusyLock(async () => {
-    state.currentGame = "order";
-    state.currentTeamIndex = 0;
-    state.teamResults = [];
-    await showTeamIntro(0);
-    startTeamRound();
-  }));
+  $("replayGameBtn").addEventListener("click", withBusyLock(replayOrderGame));
   $("toNextGameBtn").addEventListener("click", () => show("nextGameScreen"));
   $("restartAllBtn").addEventListener("click", resetGame);
   $("backFromReviewBtn").addEventListener("click", () => show(state.reviewReturnTo));
@@ -1823,10 +1939,13 @@
 
   $("toReviewGame2Btn").addEventListener("click", () => openTeamReview("game2DoneScreen", "abbr"));
   $("replayGame2Btn").addEventListener("click", withBusyLock(startAbbreviationGame));
+  $("replayGame1FromGame2Btn").addEventListener("click", withBusyLock(replayOrderGame));
   $("restartAllFromGame2Btn").addEventListener("click", resetGame);
 
   // 초기 렌더링
   renderRoster();
+  renderOdometer($("teamCountValue"), String(state.teamCount));
+  renderOdometer($("memoryTimeValue"), String(state.memorySeconds));
 </script>
 </body>
 </html>
